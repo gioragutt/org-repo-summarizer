@@ -1,0 +1,8 @@
+{
+  "name": "org-repo-summarizer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:gioragutt/org-repo-summarizer.git",
+  "author": "Giora Guttsait <giora111@gmail.com>",
+  "license": "MIT"
+}
