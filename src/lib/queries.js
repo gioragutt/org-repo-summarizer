@@ -1,13 +1,29 @@
-const {octokit} = require('./octokit');
+const {octokit} = require('../providers/octokit');
 const fetch = require('node-fetch');
 const {toArray} = require('ix/asynciterable');
 
+/**
+ * @param {string} name
+ */
+function isBot(name) {
+  return name.endsWith('bot') || name.endsWith('[bot]');
+}
+
+/**
+ * @param {string} owner
+ * @param {string} repo
+ */
 async function contributorsInRepo(owner, repo) {
   const iterator = octokit.paginate.iterator(octokit.rest.repos.listContributors, {repo, owner});
   const responses = await toArray(iterator);
-  return responses.flatMap(r => r.data);
+  return responses.flatMap(r => r.data).filter(c => !isBot(c.login));
 }
 
+/**
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} fileName
+ */
 async function findFilesWithName(owner, repo, fileName) {
   const iterator = octokit.paginate.iterator(octokit.rest.search.code, {
     q: `repo:${owner}/${repo}+filename:${fileName}`,
@@ -17,18 +33,20 @@ async function findFilesWithName(owner, repo, fileName) {
   return responses.flatMap(r => r.data);
 }
 
+/**
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} path
+ */
 async function downloadFile(owner, repo, path) {
   const {data} = await octokit.rest.repos.getContent({owner, repo, path});
   return await fetch(data.download_url);
 }
 
 /**
- * @param {string} name
+ * @param {string} owner
+ * @param {string} repo
  */
-function isBot(name) {
-  return name.endsWith('bot') || name.endsWith('[bot]');
-}
-
 async function lastCommitExcludingBots(owner, repo) {
   const iterator = octokit.paginate.iterator(octokit.rest.repos.listCommits, {
     owner,
@@ -43,6 +61,19 @@ async function lastCommitExcludingBots(owner, repo) {
       }
     }
   }
+}
+
+/**
+ * @param {string} org
+ */
+async function repositoriesForOrg(org) {
+  const iterator = octokit.paginate.iterator(octokit.rest.repos.listForOrg, {
+    org,
+    per_page: 100,
+  });
+
+  const responses = await toArray(iterator);
+  return responses.flatMap(r => r.data);
 }
 
 async function lastPullRequestExcludingBots(owner, repo) {
@@ -118,5 +149,6 @@ module.exports = {
   lastCommitExcludingBots,
   lastPullRequestExcludingBots,
   lastIssueExcludingBots,
+  repositoriesForOrg,
   RepoQueries,
 };

@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  summarize:
+    build: .
+    environment:
+      NODE_ENV: production
+      ORG: Soluto
+    volumes:
+      - ./data:/usr/src/app/data
+  redis:
+    image: 'redis:alpine'
