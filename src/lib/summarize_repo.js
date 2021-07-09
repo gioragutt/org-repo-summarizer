@@ -20,7 +20,7 @@ async function getPackageSummary(queries) {
   const packageJsonPaths = await queries.findFilesWithName('package.json');
 
   const packageJsonFiles = await Promise.all(
-    packageJsonPaths.map(p => queries.downloadFile(p.path).then(r => r.json())),
+    packageJsonPaths.map(p => queries.downloadFile(p.path).then(content => JSON.parse(content))),
   );
   const packages = packageJsonFiles.filter(p => p.version && p.name);
 

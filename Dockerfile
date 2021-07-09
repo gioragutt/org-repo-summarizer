@@ -2,8 +2,8 @@
 FROM node:latest AS build
 # ARG NPM_TOKEN
 WORKDIR /usr/src/app
-COPY package*.json /usr/src/app/
-RUN npm ci --only=production
+COPY package.json yarn.lock /usr/src/app/
+RUN yarn
  
 # --------------> The production image
 FROM node:lts-alpine@sha256:b2da3316acdc2bec442190a1fe10dc094e7ba4121d029cb32075ff59bb27390a

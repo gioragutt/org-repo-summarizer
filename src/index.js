@@ -1,14 +1,18 @@
 const dotenv = require('dotenv');
 const {Listr} = require('listr2');
-const {repositoriesForOrg} = require('./queries');
-const {summarizeRepo} = require('./summarize_repo');
+const {repositoriesForOrg} = require('./lib/queries');
+const {summarizeRepo} = require('./lib/summarize_repo');
+const {join} = require('path');
+const {writeFile, mkdir} = require('fs/promises');
 
 dotenv.config();
 
 const org = process.env.ORG;
+const summariesPath = join(__dirname, `data/summaries/${org}`);
 
 async function main() {
-  // const repos = await repositoriesForOrg(org);
+  await mkdir(summariesPath, {recursive: true});
+
   const tasks = new Listr(
     [
       {
@@ -30,7 +34,7 @@ async function main() {
                 title: repo.name,
                 async task() {
                   const summary = await summarizeRepo(org, repo.name);
-                  ctx.summaries[repo.name] = summary;
+                  await writeFile(join(summariesPath, `${repo.name}.json`), JSON.stringify(summary));
                 },
               };
             }),

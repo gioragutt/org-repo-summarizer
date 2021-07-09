@@ -5,7 +5,17 @@ services:
     environment:
       NODE_ENV: production
       ORG: Soluto
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
     volumes:
-      - ./data:/usr/src/app/data
+      - ./data/output:/usr/src/app/data
+
   redis:
-    image: 'redis:alpine'
+    image: docker.io/bitnami/redis:6.2
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes # recommended only for development.
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - './data/redis:/bitnami/redis/data'
