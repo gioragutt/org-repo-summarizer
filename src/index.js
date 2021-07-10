@@ -36,7 +36,7 @@ async function main() {
             repos.map(repo => {
               return {
                 title: repo.name,
-                task: summarizeRepoTask(repo.name),
+                task: summarizeRepoTask(repo),
               };
             }),
             {concurrent: true, rendererOptions: {collapse: true}},
