@@ -33,7 +33,7 @@ async function findMostUsedPackage(packageSummary) {
 
 const toCSVLine = (fileName, ctx) => async () => {
   /** @type {RepoSummary} */
-  const {repo, lastInteractions, packageSummary, contributors} = JSON.parse(
+  const {repo, lastInteractions, packageSummary, contributors, isFork} = JSON.parse(
     await readFile(join(summariesPath, fileName)),
   );
 
@@ -41,6 +41,7 @@ const toCSVLine = (fileName, ctx) => async () => {
 
   const csvLine = {
     repo,
+    isFork,
     contributor1: contributors[0]?.html_url,
     contributor2: contributors[1]?.html_url,
     contributor3: contributors[2]?.html_url,
@@ -94,6 +95,7 @@ async function main() {
     writeHeaders: true,
     headers: [
       'repo',
+      'isFork',
       'contributor1',
       'contributor2',
       'contributor3',

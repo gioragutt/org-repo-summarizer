@@ -41,10 +41,10 @@ async function getPackageSummary(queries) {
 
 /**
  * @param {string} owner owner/organization
- * @param {string} repo repository name
+ * @param {import('./queries').RepoData} repo repository
  */
 async function summarizeRepo(owner, repo) {
-  const queries = new RepoQueries(owner, repo);
+  const queries = new RepoQueries(owner, repo.name);
 
   const [contributors, packageSummary, lastCommit, lastPR, lastIssue] = await Promise.all([
     queries.contributors(),
@@ -74,7 +74,8 @@ async function summarizeRepo(owner, repo) {
 
   return {
     owner,
-    repo,
+    repo: repo.name,
+    isFork: repo.fork,
     contributors,
     packageSummary,
     lastCommit,

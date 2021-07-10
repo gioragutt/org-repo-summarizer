@@ -74,6 +74,7 @@ async function lastCommitExcludingBots(owner, repo) {
 }
 
 /**
+ * @typedef {ReturnType<typeof repositoriesForOrg> extends Promise<(infer T)[]> ? T : never} RepoData
  * @param {string} org
  */
 async function repositoriesForOrg(org) {

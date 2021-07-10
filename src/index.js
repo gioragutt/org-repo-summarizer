@@ -9,8 +9,8 @@ const {writeFile, mkdir} = require('fs/promises');
 const org = process.env.ORG;
 const summariesPath = join(__dirname, `../data/output/summaries/${org}`);
 
-const summarizeRepoTask = repo => async () => {
-  const summary = await summarizeRepo(org, repo.name);
+const summarizeRepoTask = (/** @type {import('./lib/queries').RepoData} */ repo) => async () => {
+  const summary = await summarizeRepo(org, repo);
   await writeFile(join(summariesPath, `${repo.name}.json`), JSON.stringify(summary, null, 2));
 };
 
@@ -29,7 +29,7 @@ async function main() {
       {
         title: 'Summarize Repositories',
         async task(ctx, task) {
-          /** @type {ReturnType<typeof repositoriesForOrg> extends Promise<infer T> ? T : never} */
+          /** @type {import('./lib/queries').RepoData[]} */
           const repos = ctx.repos;
 
           return task.newListr(
