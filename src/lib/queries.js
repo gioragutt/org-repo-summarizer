@@ -131,6 +131,10 @@ async function lastIssueExcludingBots(owner, repo) {
 }
 
 class RepoQueries {
+  /**
+   * @param {string} owner
+   * @param {string} repo
+   */
   constructor(owner, repo) {
     this.owner = owner;
     this.repo = repo;

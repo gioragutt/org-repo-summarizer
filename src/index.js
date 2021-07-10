@@ -37,9 +37,10 @@ async function main() {
               return {
                 title: repo.name,
                 task: summarizeRepoTask(repo),
+                retry: 5,
               };
             }),
-            {concurrent: true, rendererOptions: {collapse: true}},
+            {concurrent: 10, rendererOptions: {collapse: true}},
           );
         },
       },

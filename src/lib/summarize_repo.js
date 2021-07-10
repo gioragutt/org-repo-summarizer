@@ -1,20 +1,15 @@
 const {RepoQueries} = require('./queries');
-
-const fetch = require('node-fetch').default;
-
-async function packageStatus(packageName) {
-  const response = await fetch(`https://www.npmjs.com/package/${packageName}`);
-  if (response.status !== 200) {
-    return 'not-found';
-  }
-  if (response.url.startsWith('https://www.npmjs.com/login')) {
-    return 'private-scope';
-  }
-  return 'found';
-}
+const {downloadCount, packageStatus} = require('../providers/npm');
 
 /**
  * @param {RepoQueries} queries
+ * @return {Promise<Record<string, {
+ *  name: string;
+ *  version: string;
+ *  url: string;
+ *  status: 'not-found' | 'private-scope' | 'found';
+ *  downloadCount: number | null;
+ * }>}
  */
 async function getPackageSummary(queries) {
   const packageJsonPaths = await queries.findFilesWithName('package.json');
@@ -26,13 +21,17 @@ async function getPackageSummary(queries) {
 
   return Object.fromEntries(
     await Promise.all(
-      packages.map(async p => {
+      packages.map(async ({name, version}) => {
+        const status = await packageStatus(name);
+
         return [
-          p.name,
+          name,
           {
-            version: p.version,
-            status: await packageStatus(p.name),
-            url: `https://www.npmjs.com/package/${p.name}`,
+            name,
+            version,
+            status,
+            downloadCount: status === 'found' ? await downloadCount(name) : null,
+            url: `https://www.npmjs.com/package/${name}`,
           },
         ];
       }),
@@ -74,6 +73,8 @@ async function summarizeRepo(owner, repo) {
   };
 
   return {
+    owner,
+    repo,
     contributors,
     packageSummary,
     lastCommit,
