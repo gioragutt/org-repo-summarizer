@@ -1,6 +1,8 @@
 const Redis = require('ioredis');
 
-const redis = new Redis(Number(process.env.REDIS_PORT), process.env.REDIS_HOST);
+const redisPort = Number(process.env.REDIS_PORT);
+const redisHost = process.env.REDIS_HOST;
+const redis = new Redis(redisPort, redisHost);
 
 /**
  * @template T
@@ -18,6 +20,7 @@ async function getCachedOrCalculate(key, calculate) {
   console.log('Key not cached, calculating', key);
   const value = await calculate();
   await redis.set(key, JSON.stringify(value), 'EX', 86400);
+  console.log('Key now cached', key);
   return value;
 }
 

@@ -7,11 +7,13 @@ services:
       ORG: Soluto
       REDIS_HOST: redis
       REDIS_PORT: '6379'
+      GITHUB_PAT: '${GITHUB_PAT}'
     volumes:
-      - ./data/output:/usr/src/app/data
+      - ./data:/usr/src/app/data
 
   redis:
     image: docker.io/bitnami/redis:6.2
+    hostname: redis
     environment:
       - ALLOW_EMPTY_PASSWORD=yes # recommended only for development.
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
@@ -19,3 +21,11 @@ services:
       - '6379:6379'
     volumes:
       - './data/redis:/bitnami/redis/data'
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - '8081:8081'

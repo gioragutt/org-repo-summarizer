@@ -1,14 +1,18 @@
-const dotenv = require('dotenv');
+require('dotenv').config();
+
 const {Listr} = require('listr2');
 const {repositoriesForOrg} = require('./lib/queries');
 const {summarizeRepo} = require('./lib/summarize_repo');
 const {join} = require('path');
 const {writeFile, mkdir} = require('fs/promises');
 
-dotenv.config();
-
 const org = process.env.ORG;
-const summariesPath = join(__dirname, `data/summaries/${org}`);
+const summariesPath = join(__dirname, `../data/output/summaries/${org}`);
+
+const summarizeRepoTask = repo => async () => {
+  const summary = await summarizeRepo(org, repo.name);
+  await writeFile(join(summariesPath, `${repo.name}.json`), JSON.stringify(summary, null, 2));
+};
 
 async function main() {
   await mkdir(summariesPath, {recursive: true});
@@ -24,7 +28,7 @@ async function main() {
       },
       {
         title: 'Summarize Repositories',
-        task(ctx, task) {
+        async task(ctx, task) {
           /** @type {ReturnType<typeof repositoriesForOrg> extends Promise<infer T> ? T : never} */
           const repos = ctx.repos;
 
@@ -32,10 +36,7 @@ async function main() {
             repos.map(repo => {
               return {
                 title: repo.name,
-                async task() {
-                  const summary = await summarizeRepo(org, repo.name);
-                  await writeFile(join(summariesPath, `${repo.name}.json`), JSON.stringify(summary));
-                },
+                task: summarizeRepoTask(repo.name),
               };
             }),
             {concurrent: true, rendererOptions: {collapse: true}},
@@ -44,12 +45,13 @@ async function main() {
       },
     ],
     {
-      rendererOptions: {showTimer: true, showSubtasks: false},
+      rendererOptions: {showTimer: true, showSubtasks: true},
     },
   );
 
-  const ctx = await tasks.run({summaries: {}});
-  console.log(Object.keys(ctx.summaries));
+  await tasks.run({});
 }
 
-main().catch(console.error);
+main()
+  .then(() => process.exit(0))
+  .catch(console.error);
