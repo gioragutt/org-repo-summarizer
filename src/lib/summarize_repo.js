@@ -46,13 +46,16 @@ async function getPackageSummary(queries) {
 async function summarizeRepo(owner, repo) {
   const queries = new RepoQueries(owner, repo.name);
 
-  const [contributors, packageSummary, lastCommit, lastPR, lastIssue] = await Promise.all([
-    queries.contributors(),
-    getPackageSummary(queries),
-    queries.lastCommitExcludingBots(),
-    queries.lastPullRequestExcludingBots(),
-    queries.lastIssueExcludingBots(),
-  ]);
+  const [contributors, packageSummary, lastCommit, lastPR, lastIssue, issuesInPastYear, prsInPastYear] =
+    await Promise.all([
+      queries.contributors(),
+      getPackageSummary(queries),
+      queries.lastCommitExcludingBots(),
+      queries.lastPullRequestExcludingBots(),
+      queries.lastIssueExcludingBots(),
+      queries.issuesInPastYear(),
+      queries.prsInPastYear(),
+    ]);
 
   const lastInteractions = {
     commit: lastCommit && {
@@ -76,12 +79,16 @@ async function summarizeRepo(owner, repo) {
     owner,
     repo: repo.name,
     isFork: repo.fork,
+    forks: repo.forks,
+    stars: repo.stargazers_count,
     contributors,
     packageSummary,
     lastCommit,
     lastPR,
     lastIssue,
     lastInteractions,
+    issuesInPastYear,
+    prsInPastYear,
   };
 }
 

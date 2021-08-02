@@ -2,12 +2,17 @@ const {octokit} = require('../providers/octokit');
 const {getCachedOrCalculate} = require('../providers/redis');
 const fetch = require('node-fetch').default;
 const {toArray} = require('ix/asynciterable');
+const {differenceInYears} = require('date-fns');
 
 /**
  * @param {string} name
  */
 function isBot(name) {
-  return name.endsWith('bot') || name.endsWith('[bot]');
+  return name?.endsWith('bot') || name?.endsWith('[bot]');
+}
+
+function isBotInPR(pull) {
+  return isBot(pull?.user?.login) || !!pull?.title?.toLowerCase().includes('snyk');
 }
 
 /**
@@ -101,7 +106,7 @@ async function lastPullRequestExcludingBots(owner, repo) {
 
     for await (const {data: pulls} of iterator) {
       for (const pull of pulls) {
-        if (!isBot(pull.user.login)) {
+        if (!isBotInPR(pull)) {
           return pull;
         }
       }
@@ -128,6 +133,54 @@ async function lastIssueExcludingBots(owner, repo) {
       }
     }
     return null;
+  });
+}
+
+async function issuesInPastYear(owner, repo) {
+  return getCachedOrCalculate(`issues_in_past_year/${owner}/${repo}`, async () => {
+    const iterator = octokit.paginate.iterator(octokit.rest.issues.listForRepo, {
+      owner,
+      repo,
+      per_page: 30,
+      direction: 'desc',
+      state: 'all',
+    });
+
+    let counter = 0;
+    for await (const {data: issues} of iterator) {
+      for (const issue of issues) {
+        if (
+          !isBot(issue.user.login) &&
+          !issue.pull_request &&
+          differenceInYears(new Date(), new Date(issue.updated_at)) < 1
+        ) {
+          counter++;
+        }
+      }
+    }
+    return counter;
+  });
+}
+
+async function prsInPastYear(owner, repo) {
+  return getCachedOrCalculate(`prs_in_past_year/${owner}/${repo}`, async () => {
+    const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, {
+      owner,
+      repo,
+      per_page: 30,
+      direction: 'desc',
+      state: 'all',
+    });
+
+    let counter = 0;
+    for await (const {data: pulls} of iterator) {
+      for (const pr of pulls) {
+        if (!isBotInPR(pr.user.login) && differenceInYears(new Date(), new Date(pr.updated_at)) < 1) {
+          counter++;
+        }
+      }
+    }
+    return counter;
   });
 }
 
@@ -160,8 +213,17 @@ class RepoQueries {
   async lastPullRequestExcludingBots() {
     return await lastPullRequestExcludingBots(this.owner, this.repo);
   }
+
   async lastIssueExcludingBots() {
     return await lastIssueExcludingBots(this.owner, this.repo);
+  }
+
+  async issuesInPastYear() {
+    return await issuesInPastYear(this.owner, this.repo);
+  }
+
+  async prsInPastYear() {
+    return await prsInPastYear(this.owner, this.repo);
   }
 }
 
@@ -173,5 +235,7 @@ module.exports = {
   lastPullRequestExcludingBots,
   lastIssueExcludingBots,
   repositoriesForOrg,
+  issuesInPastYear,
+  prsInPastYear,
   RepoQueries,
 };

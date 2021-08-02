@@ -1,14 +1,14 @@
 {
   "name": "org-repo-summarizer",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "repository": "git@github.com:gioragutt/org-repo-summarizer.git",
   "author": "Giora Guttsait <giora111@gmail.com>",
   "license": "MIT",
   "scripts": {
     "lint": "eslint .",
     "start": "node .",
-    "dc": "docker compose -f docker-compose.yml"
+    "dc": "docker-compose up"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.14.7",
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.14.6",
+    "date-fns": "^2.23.0",
     "dotenv": "^10.0.0",
     "eslint-config-prettier": "^8.3.0",
     "fast-csv": "^4.3.6",
