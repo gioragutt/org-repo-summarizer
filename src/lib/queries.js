@@ -175,7 +175,7 @@ async function prsInPastYear(owner, repo) {
     let counter = 0;
     for await (const {data: pulls} of iterator) {
       for (const pr of pulls) {
-        if (!isBotInPR(pr.user.login) && differenceInYears(new Date(), new Date(pr.updated_at)) < 1) {
+        if (!isBotInPR(pr) && differenceInYears(new Date(), new Date(pr.updated_at)) < 1) {
           counter++;
         }
       }
